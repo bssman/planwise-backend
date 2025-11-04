@@ -1,0 +1,30 @@
+# Python virtual environments
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE & system files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Build & cache
+*.log
+*.sqlite3
+*.db
+*.egg-info/
+dist/
+build/
+
+# Environment files
+.env
+
+# OS generated files
+*.bak
+*.tmp
+
+# FastAPI specific
+*.pytest_cache/
