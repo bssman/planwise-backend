@@ -5,11 +5,8 @@ import axios from "axios";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 
-// ✅ Mapbox access token
-const MAPBOX_TOKEN = "pk.eyJ1IjoiYnNzbWFuIiwiYSI6ImNtaGowdWJqajBtbWEybXM4c2oybDNna3QifQ.j6Fjx-lltlRotKfB6UFwYg";
-
-// ✅ Use Vite environment variable (not process.env)
-const API_BASE = import.meta.env.VITE_API_URL;
+const MAPBOX_TOKEN = "pk.eyJ1IjoiYnNzbWFuIiwiYSI6ImNtaGowdWJqajBtbWEybXM4c2oybDNna3QifQ.j6Fjx-lltlRotKfB6UFwYg"; // put your real token here
+const API_BASE = process.env.REACT_APP_API_URL; // ✅ use environment variable
 
 export default function App() {
   const mapContainer = useRef(null);
@@ -21,11 +18,10 @@ export default function App() {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // ✅ Initialize Mapbox + Draw
+  // Initialize map and draw tools
   useEffect(() => {
-    if (!mapContainer.current) return;
-
     mapboxgl.accessToken = MAPBOX_TOKEN;
+
     const map = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/streets-v11",
@@ -42,10 +38,11 @@ export default function App() {
     mapRef.current = map;
     drawRef.current = draw;
 
+    // cleanup on unmount
     return () => map.remove();
   }, []);
 
-  // ✅ Generate plan from backend
+  // Generate layout plan
   async function generatePlan() {
     const draw = drawRef.current;
     const map = mapRef.current;
@@ -71,31 +68,39 @@ export default function App() {
       setPreview(res.data);
       alert("✅ Plan generated successfully!");
 
+      // Remove old preview layer if it exists
       if (map.getSource("preview")) {
         if (map.getLayer("preview-points")) map.removeLayer("preview-points");
         map.removeSource("preview");
       }
 
+      // Add new preview layer
       map.addSource("preview", { type: "geojson", data: res.data });
       map.addLayer({
         id: "preview-points",
         type: "circle",
         source: "preview",
-        paint: { "circle-radius": 6, "circle-color": "#ff0000" },
+        paint: {
+          "circle-radius": 6,
+          "circle-color": "#ff0000",
+        },
       });
     } catch (err) {
       console.error(err);
-      alert("❌ Failed to connect to backend. Make sure FastAPI is live on Render.");
+      alert(
+        "❌ Failed to connect to backend. Make sure FastAPI is running and CORS is configured."
+      );
     } finally {
       setLoading(false);
     }
   }
 
-  // ✅ UI Layout
   return (
     <div style={{ display: "flex", height: "100vh" }}>
+      {/* Map section */}
       <div ref={mapContainer} style={{ flex: 3, height: "100%" }} />
 
+      {/* Control panel */}
       <div
         style={{
           flex: 1,
@@ -112,7 +117,9 @@ export default function App() {
         <input
           type="number"
           value={targetPopulation}
-          onChange={(e) => setTargetPopulation(parseInt(e.target.value || 0))}
+          onChange={(e) =>
+            setTargetPopulation(parseInt(e.target.value || 0))
+          }
           style={{ width: "100%", marginBottom: 10 }}
         />
 
