@@ -6,9 +6,16 @@ import random
 
 app = FastAPI(title="PlanWise API")
 
+# ✅ Allow specific origins for security
+origins = [
+    "http://localhost:5173",  # Local dev with Vite
+    "http://localhost:5174",  # Sometimes Vite uses a different port
+    "https://planwise-frontend.vercel.app",  # Production frontend on Vercel
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,        # allow these domains
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -35,12 +42,19 @@ def generate_plan(payload: dict):
         x, y = random.uniform(minx, maxx), random.uniform(miny, maxy)
         p = Point(x, y)
         if geom.contains(p):
-            features.append(geojson.Feature(geometry=mapping(p), properties={"type":"parcel"}))
+            features.append(
+                geojson.Feature(geometry=mapping(p), properties={"type": "parcel"})
+            )
 
     # add facilities near centroid
     for f in facilities:
         fx, fy = centroid.x + random.uniform(-0.001, 0.001), centroid.y + random.uniform(-0.001, 0.001)
         pf = Point(fx, fy)
-        features.append(geojson.Feature(geometry=mapping(pf), properties={"type":"facility","name":f}))
+        features.append(
+            geojson.Feature(
+                geometry=mapping(pf),
+                properties={"type": "facility", "name": f},
+            )
+        )
 
     return geojson.FeatureCollection(features)
